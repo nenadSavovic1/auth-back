@@ -7,10 +7,12 @@ AppDataSource.initialize()
   })
   .catch((error) => console.log(error))
 
+  const userRepository = AppDataSource.getRepository(Users);
+
+
 export const getAllUsers = async (req, res) => {
   try {
-    const repository = AppDataSource.getRepository(Users);
-    const users = await repository.find();
+    const users = await userRepository.find();
     res.status(200).json(users);
   } catch (err) {
     console.error(err);
@@ -40,8 +42,7 @@ export const createUser = async (req, res) => {
 export const getUserById = async (req, res) => {
   const id = parseInt(req.params.id);
   try {
-    const usersRepo = AppDataSource.getRepository(Users);
-    const user = await usersRepo.findOne({ where: { id: id } });
+    const user = await userRepository.findOne({ where: { id: id } });
     if(user) {
       res.status(200).send(user);
     } else {
@@ -60,13 +61,12 @@ export const updateUser = async (req, res) => {
   const id = parseInt(req.params.id);
   const { first_name, last_name, email, age } = req.body;
   try {
-    const usersRepo = AppDataSource.getRepository(Users);
-    const user = await usersRepo.findOne({ where: { id: id } });
+    const user = await userRepository.findOne({ where: { id: id } });
     user.first_name = first_name;
     user.last_name = last_name;
     user.email = email;
     user.age = age;
-    await usersRepo.save(user);
+    await userRepository.save(user);
     res.status(200).send(user);
 
   } catch (error) {
@@ -77,7 +77,7 @@ export const updateUser = async (req, res) => {
 export const deleteUser = (req, res) => {
   const id = parseInt(req.params.id);
   try {
-    const usersRepo = AppDataSource.getRepository(Users).delete({id: id})
+    userRepository.delete({id: id})
     res.status(200).send(`User with id: ${id} deleted`);
   } catch (error) {
     res.status(500).send(`Error deleting user with id: ${id}`);

@@ -1,86 +1,86 @@
-import pg from "pg";
+import { AppDataSource } from "../data-source";
+import { Users } from "../entity/Users";
 
-const { Client } = pg;
-
-// Database connection configuration
-const client = new Client({
-  user: "lenard",
-  password: "password",
-  host: "localhost",
-  port: 5432, // Use the correct PostgreSQL port
-  database: "api",
-});
-
-// Connect to the database
-client
-  .connect()
-  .then(() => console.log("Connected to PostgreSQL"))
-  .catch((err) => console.error("Connection error", err.stack));
+AppDataSource.initialize()
+  .then(() => {
+    console.log('TYPE ORM RUNNING')
+  })
+  .catch((error) => console.log(error))
 
 export const getAllUsers = async (req, res) => {
   try {
-    const result = await client.query("SELECT * FROM users");
-    res.json(result.rows);
+    const repository = AppDataSource.getRepository(Users);
+    const users = await repository.find();
+    res.status(200).json(users);
   } catch (err) {
     console.error(err);
     res.status(500).send("Error fetching users");
   }
 };
 
+export const createUser = async (req, res) => {
+  try {
+    const newUser = new Users();
+    const { first_name, last_name, age, email } = req.body;
+    newUser.first_name = first_name;
+    newUser.last_name = last_name;
+    newUser.age = age;
+    newUser.email = email;
+
+    await AppDataSource.manager.save(newUser);
+    console.log("New user has been saved. User id is", newUser.id);
+    res.status(201).json({
+      message: `User ${newUser.id} added`,
+    });
+  } catch (e) {
+    console.log("Error has ben thrown: ", e);
+  }
+};
+
 export const getUserById = async (req, res) => {
   const id = parseInt(req.params.id);
   try {
-    const result = await client.query("SELECT * FROM users WHERE id = $1", [
-      id,
-    ]);
-    res.json(result.rows);
+    const usersRepo = AppDataSource.getRepository(Users);
+    const user = await usersRepo.findOne({ where: { id: id } });
+    if(user) {
+      res.status(200).send(user);
+    } else {
+      throw new Error(`No user found with id: ${id}`);
+      
+    }
+
   } catch (error) {
     console.log(error);
     res.status(500).send(`Error fetching user with id: ${id}`);
   }
 };
 
-export const createUser = async (req, res) => {
-  const { name, email } = req.body
-  try {
-    const result = await client.query('INSERT INTO users (name, email) VALUES ($1, $2)', [name, email]);
-    if (result) {
-      res.status(201).send(`User ${email} added`);
 
-    }
+export const updateUser = async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { first_name, last_name, email, age } = req.body;
+  try {
+    const usersRepo = AppDataSource.getRepository(Users);
+    const user = await usersRepo.findOne({ where: { id: id } });
+    user.first_name = first_name;
+    user.last_name = last_name;
+    user.email = email;
+    user.age = age;
+    await usersRepo.save(user);
+    res.status(200).send(user);
+
   } catch (error) {
-    console.log(error);
-    res.status(500).send(`Error creating user`);
+    res.status(500).send(`Error editing user with id: ${id}`);
   }
 };
 
-export const updateUser = (request, response) => {
-  const id = parseInt(request.params.id)
-  const { name, email } = request.body
-  
-  client.query(
-    'UPDATE users SET name = $1, email = $2 WHERE id = $3',
-    [name, email, id],
-    (error, results) => {
-      if (error) {
-        throw error
-      }
-      response.status(200).send(`User modified with ID: ${id}`)
-    }
-  )
-}
+export const deleteUser = (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const usersRepo = AppDataSource.getRepository(Users).delete({id: id})
+    res.status(200).send(`User with id: ${id} deleted`);
+  } catch (error) {
+    res.status(500).send(`Error deleting user with id: ${id}`);
+  }
+};
 
-export const deleteUser = (request, response) => {
-  const id = parseInt(request.params.id)
-
-  client.query('DELETE FROM users WHERE id = $1', [id], (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).send(`User deleted with ID: ${id}`)
-  })
-}
-
-
-
-export default client;

@@ -1,16 +1,15 @@
 import { DataSource } from "typeorm";
-import { Users } from "./entity/Users"
+import dotenv from "dotenv";
+import { Users } from "./entity/Users";
+
+dotenv.config();
 
 export const AppDataSource = new DataSource({
     type: "postgres",
-    host: "localhost",
-    port: 5432,
-    username: "lenard",
-    password: "password",
-    database: "api",
+    url: process.env.DATABASE_URL,
     synchronize: true,
     logging: true,
-    entities: [Users],
+    entities: [__dirname + "/entity/*.js"], // This allows TypeORM to find compiled files
     subscribers: [],
     migrations: [],
 })

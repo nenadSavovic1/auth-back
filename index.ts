@@ -1,16 +1,14 @@
 import express from "express";
-import "reflect-metadata"
+import dotenv from "dotenv";
+import { AppDataSource } from "./data-source.js";
+import "reflect-metadata";
 import bodyParser from "body-parser";
-import {
-  getAllUsers,
-  createUser,
-  getUserById,
-  updateUser,
-  deleteUser
-} from "./db/database.js";
+import { UserController } from "./controllers/UserController.js";
+
+dotenv.config();
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 app.use(
@@ -19,31 +17,36 @@ app.use(
   })
 );
 
+AppDataSource.initialize()
+  .then(() => {
+    console.log("TYPE ORM RUNNING");
+  })
+  .catch((error) => console.log(error));
+
 app.get("/", (req: any, res: any) => {
   res.json({ info: "Node.js, Express, and Postgres API" });
 });
 
 app.get("/users", async (req: any, res: any) => {
-  getAllUsers(req, res);
+  UserController.getAllUsers(req, res);
 });
 
 app.post("/create", async (req, res) => {
-  createUser(req, res);
+  UserController.createUser(req, res);
 });
 
 app.get("/users/:id", async (req, res) => {
-  getUserById(req, res);
+  UserController.getUserById(req, res);
 });
 
 app.put("/edit/:id", async (req, res) => {
-  updateUser(req, res);
+  UserController.updateUser(req, res);
 });
 
 app.delete("/delete/:id", async (req, res) => {
-  deleteUser(req, res);
+  UserController.deleteUser(req, res);
 });
 
-app.listen(port, () => {
-  console.log(`App running on port ${port}.`);
+app.listen(PORT, () => {
+  console.log(`App running on port ${PORT}.`);
 });
-

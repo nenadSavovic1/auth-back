@@ -17,6 +17,8 @@ app.use(
   })
 );
 
+const userController = new UserController();
+
 AppDataSource.initialize()
   .then(() => {
     console.log("TYPE ORM RUNNING");
@@ -28,23 +30,23 @@ app.get("/", (req: any, res: any) => {
 });
 
 app.get("/users", async (req: any, res: any) => {
-  UserController.getAllUsers(req, res);
+  userController.getAllUsers(req, res);
 });
 
 app.post("/create", async (req, res) => {
-  UserController.createUser(req, res);
+  userController.createUser(req, res);
 });
 
 app.get("/users/:id", async (req, res) => {
-  UserController.getUserById(req, res);
+  userController.getUserById(req, res);
 });
 
 app.put("/edit/:id", async (req, res) => {
-  UserController.updateUser(req, res);
+  userController.updateUser(req, res);
 });
 
 app.delete("/delete/:id", async (req, res) => {
-  UserController.deleteUser(req, res);
+  userController.deleteUser(req, res);
 });
 
 app.listen(PORT, () => {

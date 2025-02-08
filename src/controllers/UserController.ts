@@ -1,11 +1,16 @@
+import { Request, Response } from "express";
 import { UserService } from "../services/UserService";
 
-const userService = new UserService();
-
 export class UserController {
-  static getAllUsers = async (req, res) => {
+  private userService: UserService;
+
+  constructor() {
+    this.userService = new UserService();
+  }
+
+  getAllUsers = async (req: Request, res: Response) => {
     try {
-      const users = await userService.getAllUsers();
+      const users = await this.userService.getAllUsers();
       res.status(200).json(users);
     } catch (err) {
       console.error(err);
@@ -13,11 +18,11 @@ export class UserController {
     }
   };
 
-  static createUser = async (req, res) => {
+  createUser = async (req: Request, res: Response) => {
     try {
       const { first_name, last_name, age, email, password } = req.body;
 
-      const newUser = await userService.registerUser(
+      const newUser = await this.userService.registerUser(
         first_name,
         last_name,
         age,
@@ -31,14 +36,14 @@ export class UserController {
       });
     } catch (error) {
       console.error("Error creating user:", error);
-      return res.status(500).json({ success: false, message: error });
+      return res.status(500).json({ success: false, message: error.message });
     }
   };
 
-  static getUserById = async (req, res) => {
+  getUserById = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     try {
-      const user = await userService.findUserById(id);
+      const user = await this.userService.findUserById(id);
       if (user) {
         res.status(200).send(user);
       } else {
@@ -50,11 +55,11 @@ export class UserController {
     }
   };
 
-  static updateUser = async (req, res) => {
+  updateUser = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     const { first_name, last_name, email, age, password } = req.body;
     try {
-      await userService.updateUser(id, {
+      await this.userService.updateUser(id, {
         first_name,
         last_name,
         age,
@@ -67,10 +72,10 @@ export class UserController {
     }
   };
 
-  static deleteUser = (req, res) => {
+  deleteUser = async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     try {
-      userService.deleteUser(id);
+      await this.userService.deleteUser(id);
       res.status(200).send(`User with id: ${id} deleted`);
     } catch (error) {
       res.status(500).send(`Error deleting user with id: ${id}`);

@@ -29,19 +29,20 @@ export class UserController {
 
   createUser = async (req: Request, res: Response) => {
     try {
-      const { first_name, last_name, age, email, password } = req.body;
+      const { first_name, last_name, age, email, password, roleId } = req.body;
 
       const newUser = await this.userService.registerUser(
         first_name,
         last_name,
         age,
         email,
-        password
+        password,
+        UserService.getRequireRoles() ? roleId : null // Inline role assignment
       );
+
       this.sendResponse(res, 201, "User created successfully", newUser);
     } catch (error) {
-      console.error("Error creating user:", error);
-      this.sendResponse(res, 500, error.message);
+      this.sendResponse(res, 500, error.message || "Error creating user");
     }
   };
 

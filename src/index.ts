@@ -1,14 +1,13 @@
 import express from "express";
-import dotenv from "dotenv";
-import { AppDataSource } from "./data-source.js";
 import "reflect-metadata";
 import bodyParser from "body-parser";
+import { AppDataSource } from "./data-source.js";
+import { ENV } from "./environment"
 import { UserController } from "./controllers/UserController.js";
 
-dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = ENV.PORT || 3000;
 
 app.use(bodyParser.json());
 app.use(

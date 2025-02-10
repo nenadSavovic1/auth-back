@@ -2,9 +2,17 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 import { AppDataSource } from "../data-source";
 import { Users } from "../entity/Users";
+import { Role } from "../entity/Role";
+import { ENV } from "../environment";
 
 export class UserService {
   private userRepository = AppDataSource.getRepository(Users);
+  private roleRepository = AppDataSource.getRepository(Role);
+  private static requireRoles: boolean = ENV.REQUIRE_ROLES;
+
+  public static getRequireRoles(): boolean {
+    return this.requireRoles;
+  }
 
   /**
    * Registers a new user
@@ -17,7 +25,8 @@ export class UserService {
     last_name: string,
     age: number,
     email: string,
-    password: string
+    password: string,
+    roleId: number
   ) {
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -34,6 +43,21 @@ export class UserService {
       throw new Error("All fields are required");
     }
 
+    if (UserService.requireRoles && !roleId) {
+      throw new Error("Role ID is required when role-based access is enabled");
+    }
+
+    let role = null;
+
+    if (roleId) {
+      // Use findOneBy for simplicity
+      role = await this.roleRepository.findOneBy({ id: roleId });
+
+      if (!role) {
+        throw new Error(`Role with ID ${roleId} not found`);
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = this.userRepository.create({
       email,
@@ -41,6 +65,7 @@ export class UserService {
       last_name,
       age,
       password: hashedPassword,
+      role: UserService.getRequireRoles() ? role : null,
     });
 
     await this.userRepository.save(newUser);

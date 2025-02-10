@@ -8,13 +8,22 @@ export class UserController {
     this.userService = new UserService();
   }
 
+  private sendResponse(
+    res: Response,
+    status: number,
+    message: string,
+    data?: any
+  ) {
+    return res.status(status).json({ message, ...(data && { data }) });
+  }
+
   getAllUsers = async (req: Request, res: Response) => {
     try {
       const users = await this.userService.getAllUsers();
-      res.status(200).json(users);
+      this.sendResponse(res, 200, "Users fetched successfully", users);
     } catch (err) {
       console.error(err);
-      res.status(500).send("Error fetching users");
+      this.sendResponse(res, 500, "Error fetching users");
     }
   };
 
@@ -29,34 +38,35 @@ export class UserController {
         email,
         password
       );
-      return res.status(201).json({
-        success: true,
-        message: "User created successfully",
-        user: newUser,
-      });
+      this.sendResponse(res, 201, "User created successfully", newUser);
     } catch (error) {
       console.error("Error creating user:", error);
-      return res.status(500).json({ success: false, message: error.message });
+      this.sendResponse(res, 500, error.message);
     }
   };
 
   getUserById = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     try {
       const user = await this.userService.findUserById(id);
       if (user) {
-        res.status(200).send(user);
+        this.sendResponse(
+          res,
+          200,
+          `User with id ${id} fetched successfully`,
+          user
+        );
       } else {
-        throw new Error(`No user found with id: ${id}`);
+        this.sendResponse(res, 404, `No user found with id: ${id}`);
       }
     } catch (error) {
-      console.log(error);
-      res.status(500).send(`Error fetching user with id: ${id}`);
+      console.error(error);
+      this.sendResponse(res, 500, `Error fetching user with id: ${id}`);
     }
   };
 
   updateUser = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const { first_name, last_name, email, age, password } = req.body;
     try {
       await this.userService.updateUser(id, {
@@ -66,19 +76,21 @@ export class UserController {
         email,
         password,
       });
-      res.status(200).send(`User with id ${id} successfully updated`);
+      this.sendResponse(res, 200, `User with id ${id} successfully updated`);
     } catch (error) {
-      res.status(500).send(`Error editing user with id: ${id}`);
+      console.error(error);
+      this.sendResponse(res, 500, `Error updating user with id: ${id}`);
     }
   };
 
   deleteUser = async (req: Request, res: Response) => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     try {
       await this.userService.deleteUser(id);
-      res.status(200).send(`User with id: ${id} deleted`);
+      this.sendResponse(res, 200, `User with id ${id} deleted successfully`);
     } catch (error) {
-      res.status(500).send(`Error deleting user with id: ${id}`);
+      console.error(error);
+      this.sendResponse(res, 500, `Error deleting user with id: ${id}`);
     }
   };
 }
